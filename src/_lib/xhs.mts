@@ -63,20 +63,22 @@ async function tikhubFetch(url: string) {
 
 export async function fetchDirect(noteId: string, shareUrl: string, commentCount = 10): Promise<Note | null> {
   if (!noteId && shareUrl) {
-    const r = await fetch(shareUrl, { headers: { 'User-Agent': UA }, redirect: 'follow' })
+    const r = await fetch(shareUrl, { headers: XHS_HEADERS, redirect: 'follow' })
     const m = r.url.match(/xiaohongshu\.com\/(explore|discovery\/item)\/([a-zA-Z0-9]+)/)
     if (m) noteId = m[2]
     if (!noteId) return null
     const html = await r.text()
+    console.log('[xhs] final url:', r.url, 'status:', r.status, 'html:', html.slice(0, 300))
     const note = parsePage(html, noteId, r.url, commentCount)
     return await enrichDirectComments(note, noteId, r.url, html, commentCount)
   }
   if (noteId) {
     const r2 = await fetch('https://www.xiaohongshu.com/explore/' + noteId, {
-      headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'zh-CN,zh;q=0.9' },
+      headers: XHS_HEADERS,
       redirect: 'follow',
     })
     const html = await r2.text()
+    console.log('[xhs] explore url:', r2.url, 'status:', r2.status, 'html:', html.slice(0, 300))
     const note = parsePage(html, noteId, r2.url, commentCount)
     return await enrichDirectComments(note, noteId, r2.url, html, commentCount)
   }
